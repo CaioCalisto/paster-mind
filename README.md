@@ -1,1 +1,1 @@
-# paster-mind
+# PasterMind
