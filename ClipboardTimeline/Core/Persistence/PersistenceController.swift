@@ -1,18 +1,8 @@
-import SwiftData
-
+// Reserved for SwiftData integration.
+// ModelContainer setup requires @Model types, which depend on Xcode's
+// SwiftDataMacros plugin and are not available in SPM / Command Line Tools builds.
 @MainActor
 final class PersistenceController {
     static let shared = PersistenceController()
-
-    private(set) var container: ModelContainer?
-
     private init() {}
-
-    // Call once models are defined, e.g. in ClipboardTimelineApp:
-    //   try PersistenceController.shared.setup(for: [ClipboardEntry.self])
-    func setup(for types: [any PersistentModel.Type]) throws {
-        let schema = Schema(types)
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-        container = try ModelContainer(for: schema, configurations: [config])
-    }
 }

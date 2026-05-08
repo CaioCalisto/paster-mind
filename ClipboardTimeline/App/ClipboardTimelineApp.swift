@@ -7,7 +7,6 @@ struct ClipboardTimelineApp: App {
     var body: some Scene {
         MenuBarExtra("Clipboard Timeline", systemImage: "doc.on.clipboard") {
             MenuBarView()
-            // .modelContainer(...) — add once first model is defined
         }
         .menuBarExtraStyle(.window)
 
