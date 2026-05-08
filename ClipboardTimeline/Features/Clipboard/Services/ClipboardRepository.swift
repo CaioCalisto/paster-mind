@@ -1,5 +1,54 @@
-// NOTE: Uses in-memory storage for SPM / Command Line Tools builds.
-// Replace with SwiftData ModelContext when building with Xcode.
+// MARK: - Xcode / SwiftData build
+
+#if !SPM_BUILD
+import SwiftData
+
+@MainActor
+final class ClipboardRepository: ClipboardRepositoryProtocol {
+    private let context: ModelContext
+
+    init(context: ModelContext) {
+        self.context = context
+    }
+
+    func save(_ content: ClipboardContent) throws {
+        switch content {
+        case .text(let text):
+            if let recent = mostRecent(), recent.text == text {
+                recent.createdAt = .now
+            } else {
+                context.insert(ClipboardEntry(text: text))
+            }
+        }
+        try context.save()
+    }
+
+    func mostRecent() -> ClipboardEntry? {
+        var descriptor = FetchDescriptor<ClipboardEntry>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try? context.fetch(descriptor).first
+    }
+
+    func fetchRecent(limit: Int) -> [ClipboardEntry] {
+        var descriptor = FetchDescriptor<ClipboardEntry>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = limit
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    func toggleFavorite(_ entry: ClipboardEntry) throws {
+        entry.isFavorite.toggle()
+        try context.save()
+    }
+}
+
+// MARK: - SPM build (in-memory, no SwiftData)
+
+#else
+
 @MainActor
 final class ClipboardRepository: ClipboardRepositoryProtocol {
     private var entries: [ClipboardEntry] = []
@@ -16,6 +65,17 @@ final class ClipboardRepository: ClipboardRepositoryProtocol {
     }
 
     func mostRecent() -> ClipboardEntry? {
-        entries.last
+        entries.sorted { $0.createdAt > $1.createdAt }.first
+    }
+
+    func fetchRecent(limit: Int) -> [ClipboardEntry] {
+        Array(entries.sorted { $0.createdAt > $1.createdAt }.prefix(limit))
+    }
+
+    func toggleFavorite(_ entry: ClipboardEntry) throws {
+        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
+        entries[index].isFavorite.toggle()
     }
 }
+
+#endif

@@ -15,9 +15,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startClipboardMonitoring() {
+        #if !SPM_BUILD
+        let repository = ClipboardRepository(context: PersistenceController.shared.mainContext)
+        #else
+        let repository = ClipboardRepository()
+        #endif
+
         let monitor = ClipboardMonitor()
         let parser = ClipboardParser()
-        let repository = ClipboardRepository()
 
         monitor.onPasteboardChange = {
             guard let content = parser.parse(.general) else { return }

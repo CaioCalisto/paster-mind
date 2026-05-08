@@ -1,16 +1,41 @@
 import Foundation
 
-// NOTE: @Model (SwiftData) requires Xcode's SwiftDataMacros plugin.
-// This is a plain struct for SPM / Command Line Tools builds.
-// Replace with @Model class when building with Xcode.
+// MARK: - Xcode / SwiftData build
+
+#if !SPM_BUILD
+import SwiftData
+
+@Model
+final class ClipboardEntry {
+    var id: UUID
+    var text: String
+    var createdAt: Date
+    var isFavorite: Bool
+
+    init(text: String) {
+        self.id = UUID()
+        self.text = text
+        self.createdAt = .now
+        self.isFavorite = false
+    }
+}
+
+// MARK: - SPM build (no SwiftDataMacros plugin available)
+
+#else
+
 struct ClipboardEntry: Identifiable {
     let id: UUID
     var text: String
     var createdAt: Date
+    var isFavorite: Bool
 
-    init(text: String, createdAt: Date = .now) {
+    init(text: String) {
         self.id = UUID()
         self.text = text
-        self.createdAt = createdAt
+        self.createdAt = .now
+        self.isFavorite = false
     }
 }
+
+#endif
