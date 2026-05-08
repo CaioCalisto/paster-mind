@@ -27,6 +27,9 @@ final class HistoryWindowController: NSWindowController, NSWindowDelegate {
 
         super.init(window: panel)
 
+        // Close the panel whenever an item is copied (keyboard or mouse).
+        viewModel.onItemCopied = { [weak self] in self?.close() }
+
         panel.delegate = self
         panel.contentView = NSHostingView(
             rootView: HistoryWindowView(viewModel: viewModel)
@@ -35,12 +38,12 @@ final class HistoryWindowController: NSWindowController, NSWindowDelegate {
         panel.onKeyDown = { [weak self] event in
             guard let self else { return false }
             switch event.keyCode {
-            case 53:  close(); return true                              // ESC
-            case 125: viewModel.selectNext(); return true               // ↓
-            case 126: viewModel.selectPrevious(); return true           // ↑
-            case 36:  viewModel.copySelected(); close(); return true    // ↵ copy + close
+            case 53:  close(); return true                   // ESC
+            case 125: viewModel.selectNext(); return true    // ↓
+            case 126: viewModel.selectPrevious(); return true // ↑
+            case 36:  viewModel.copySelected(); return true  // ↵ — close via onItemCopied
             case 9 where event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.command, .shift]:
-                      close(); return true                              // ⌘⇧V toggle close
+                      close(); return true                   // ⌘⇧V toggle close
             default:  return false
             }
         }

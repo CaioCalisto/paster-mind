@@ -7,6 +7,9 @@ final class ClipboardHistoryViewModel: ObservableObject {
     @Published var entries: [ClipboardEntry] = []
     @Published var selectedEntryID: ClipboardEntry.ID?
 
+    /// Called after a successful copy so the window controller can close the panel.
+    var onItemCopied: (() -> Void)?
+
     init(repository: any ClipboardRepositoryProtocol) {
         self.repository = repository
     }
@@ -24,7 +27,10 @@ final class ClipboardHistoryViewModel: ObservableObject {
         move(by: -1)
     }
 
-    /// Writes the selected entry back to the pasteboard and returns true on success.
+    /// Writes the selected entry back to the pasteboard, then fires `onItemCopied`.
+    /// The re-copy is loop-safe: the monitor will detect the pasteboard change and
+    /// call `repo.save()`, which promotes the existing entry rather than inserting
+    /// a duplicate (dedup checks all history, not just the most recent entry).
     @discardableResult
     func copySelected() -> Bool {
         guard
@@ -34,6 +40,7 @@ final class ClipboardHistoryViewModel: ObservableObject {
 
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(entry.text, forType: .string)
+        onItemCopied?()
         return true
     }
 

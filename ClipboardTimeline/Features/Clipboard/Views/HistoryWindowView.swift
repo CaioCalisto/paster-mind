@@ -64,6 +64,7 @@ struct HistoryWindowView: View {
                         .id(entry.id)
                         .onTapGesture {
                             viewModel.selectedEntryID = entry.id
+                            viewModel.copySelected()
                         }
                     }
                 }

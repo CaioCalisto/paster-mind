@@ -14,8 +14,14 @@ final class ClipboardRepository: ClipboardRepositoryProtocol {
     func save(_ content: ClipboardContent) throws {
         switch content {
         case .text(let text, let sourceApp, let sourceBundleID):
-            if let recent = mostRecent(), recent.text == text {
-                recent.createdAt = .now
+            // Check ALL history, not just the most recent, so that re-copying
+            // an older item promotes it to the top instead of creating a duplicate.
+            var descriptor = FetchDescriptor<ClipboardEntry>(
+                predicate: #Predicate { $0.text == text }
+            )
+            descriptor.fetchLimit = 1
+            if let existing = try? context.fetch(descriptor).first {
+                existing.createdAt = .now
             } else {
                 context.insert(ClipboardEntry(text: text, sourceApp: sourceApp, sourceBundleID: sourceBundleID))
             }
@@ -56,8 +62,10 @@ final class ClipboardRepository: ClipboardRepositoryProtocol {
     func save(_ content: ClipboardContent) throws {
         switch content {
         case .text(let text, let sourceApp, let sourceBundleID):
-            if entries.last?.text == text {
-                entries[entries.endIndex - 1].createdAt = .now
+            // Check ALL history, not just the most recent, so that re-copying
+            // an older item promotes it to the top instead of creating a duplicate.
+            if let index = entries.firstIndex(where: { $0.text == text }) {
+                entries[index].createdAt = .now
             } else {
                 entries.append(ClipboardEntry(text: text, sourceApp: sourceApp, sourceBundleID: sourceBundleID))
             }
