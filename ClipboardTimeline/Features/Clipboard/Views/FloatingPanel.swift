@@ -9,8 +9,13 @@ final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
-    override func keyDown(with event: NSEvent) {
-        guard onKeyDown?(event) != true else { return }
-        super.keyDown(with: event)
+    /// Intercepts key events before they are dispatched to the first responder.
+    /// This means navigation keys (↑↓, ↵, ESC) work even when a TextField is focused,
+    /// without blocking regular character input from reaching the search field.
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown, let onKeyDown, onKeyDown(event) {
+            return  // consumed — do not dispatch to responder chain
+        }
+        super.sendEvent(event)
     }
 }

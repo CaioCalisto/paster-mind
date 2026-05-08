@@ -38,12 +38,18 @@ final class HistoryWindowController: NSWindowController, NSWindowDelegate {
         panel.onKeyDown = { [weak self] event in
             guard let self else { return false }
             switch event.keyCode {
-            case 53:  close(); return true                   // ESC
-            case 125: viewModel.selectNext(); return true    // ↓
+            case 53:  // ESC — clear search first; close if already empty
+                if !viewModel.searchQuery.isEmpty {
+                    viewModel.searchQuery = ""
+                } else {
+                    close()
+                }
+                return true
+            case 125: viewModel.selectNext(); return true     // ↓
             case 126: viewModel.selectPrevious(); return true // ↑
-            case 36:  viewModel.copySelected(); return true  // ↵ — close via onItemCopied
+            case 36:  viewModel.copySelected(); return true   // ↵ — close via onItemCopied
             case 9 where event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.command, .shift]:
-                      close(); return true                   // ⌘⇧V toggle close
+                      close(); return true                    // ⌘⇧V toggle close
             default:  return false
             }
         }

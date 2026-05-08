@@ -5,7 +5,10 @@ struct HistoryWindowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            searchBarPlaceholder
+            ClipboardSearchBar(
+                text: $viewModel.searchQuery,
+                revision: viewModel.searchRevision
+            )
             Divider()
             content
         }
@@ -16,24 +19,9 @@ struct HistoryWindowView: View {
 
     // MARK: - Subviews
 
-    /// Placeholder until the Search feature is implemented.
-    private var searchBarPlaceholder: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-                .font(.system(size: 15))
-            Text("Search clipboard…")
-                .foregroundStyle(.tertiary)
-                .font(.system(size: 15))
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-    }
-
     @ViewBuilder
     private var content: some View {
-        if viewModel.entries.isEmpty {
+        if viewModel.filteredEntries.isEmpty {
             emptyState
         } else {
             entryList
@@ -42,21 +30,29 @@ struct HistoryWindowView: View {
 
     private var emptyState: some View {
         VStack(spacing: 10) {
-            Image(systemName: "clipboard")
+            Image(systemName: viewModel.searchQuery.isEmpty ? "clipboard" : "magnifyingglass")
                 .font(.system(size: 30))
                 .foregroundStyle(.secondary)
-            Text("No clipboard history yet")
+            Text(emptyMessage)
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var emptyMessage: String {
+        if viewModel.searchQuery.isEmpty {
+            return "No clipboard history yet"
+        }
+        let q = viewModel.searchQuery.trimmingCharacters(in: .whitespaces)
+        return "No results for \u{201C}\(q)\u{201D}"
+    }
+
     private var entryList: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 2) {
-                    ForEach(viewModel.entries) { entry in
+                    ForEach(viewModel.filteredEntries) { entry in
                         ClipboardEntryRow(
                             entry: entry,
                             isSelected: viewModel.selectedEntryID == entry.id
@@ -90,11 +86,11 @@ struct HistoryWindowView: View {
         func toggleFavorite(_ entry: ClipboardEntry) throws {}
         func fetchRecent(limit: Int) -> [ClipboardEntry] {
             [
-                ClipboardEntry(text: "let greeting = \"Hello, World!\""),
-                ClipboardEntry(text: "https://developer.apple.com/documentation/swiftui"),
-                ClipboardEntry(text: "The quick brown fox jumps over the lazy dog. This is a longer text that may wrap."),
+                ClipboardEntry(text: "let greeting = \"Hello, World!\"", sourceApp: "Xcode"),
+                ClipboardEntry(text: "https://developer.apple.com/documentation/swiftui", sourceApp: "Safari"),
+                ClipboardEntry(text: "The quick brown fox jumps over the lazy dog.", sourceApp: "Notes"),
                 ClipboardEntry(text: "cmd + shift + v"),
-                ClipboardEntry(text: "SwiftData @Model macro"),
+                ClipboardEntry(text: "SwiftData @Model macro", sourceApp: "Xcode"),
             ]
         }
     }
