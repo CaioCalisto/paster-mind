@@ -5,15 +5,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitor: ClipboardMonitor?
     private var repository: ClipboardRepository?
     private var historyWindowController: HistoryWindowController?
+    private var shortcutMonitor: GlobalShortcutMonitor?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupRepository()
         startClipboardMonitoring()
         setupHistoryWindow()
+        registerShortcuts()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         monitor?.stop()
+        shortcutMonitor?.stop()
     }
 
     /// Called via NSApp responder chain from MenuBarView.
@@ -50,5 +53,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let repo = repository else { return }
         let viewModel = ClipboardHistoryViewModel(repository: repo)
         historyWindowController = HistoryWindowController(viewModel: viewModel)
+    }
+
+    private func registerShortcuts() {
+        let sm = GlobalShortcutMonitor()
+        sm.onTriggered = { [weak self] in self?.historyWindowController?.toggle() }
+        sm.start()
+        shortcutMonitor = sm
     }
 }

@@ -9,8 +9,7 @@ let package = Package(
             name: "ClipboardTimeline",
             path: "ClipboardTimeline",
             exclude: ["App/Info.plist"],
-            // SPM_BUILD disables @Model macro (requires Xcode's SwiftDataMacros plugin).
-            // Remove this flag when building with Xcode.
+            // SPM_BUILD disables @Model and #Preview macros (require Xcode plugins).
             swiftSettings: [.define("SPM_BUILD")]
         )
     ]

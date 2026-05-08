@@ -39,6 +39,8 @@ final class HistoryWindowController: NSWindowController, NSWindowDelegate {
             case 125: viewModel.selectNext(); return true               // ↓
             case 126: viewModel.selectPrevious(); return true           // ↑
             case 36:  viewModel.copySelected(); close(); return true    // ↵ copy + close
+            case 9 where event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.command, .shift]:
+                      close(); return true                              // ⌘⇧V toggle close
             default:  return false
             }
         }
