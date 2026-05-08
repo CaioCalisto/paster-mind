@@ -11,12 +11,16 @@ final class ClipboardEntry {
     var text: String
     var createdAt: Date
     var isFavorite: Bool
+    var sourceApp: String?
+    var sourceBundleID: String?
 
-    init(text: String) {
+    init(text: String, sourceApp: String? = nil, sourceBundleID: String? = nil) {
         self.id = UUID()
         self.text = text
         self.createdAt = .now
         self.isFavorite = false
+        self.sourceApp = sourceApp
+        self.sourceBundleID = sourceBundleID
     }
 }
 
@@ -29,12 +33,16 @@ struct ClipboardEntry: Identifiable {
     var text: String
     var createdAt: Date
     var isFavorite: Bool
+    var sourceApp: String?
+    var sourceBundleID: String?
 
-    init(text: String) {
+    init(text: String, sourceApp: String? = nil, sourceBundleID: String? = nil) {
         self.id = UUID()
         self.text = text
         self.createdAt = .now
         self.isFavorite = false
+        self.sourceApp = sourceApp
+        self.sourceBundleID = sourceBundleID
     }
 }
 

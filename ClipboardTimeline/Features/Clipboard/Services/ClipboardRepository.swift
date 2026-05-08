@@ -13,11 +13,11 @@ final class ClipboardRepository: ClipboardRepositoryProtocol {
 
     func save(_ content: ClipboardContent) throws {
         switch content {
-        case .text(let text):
+        case .text(let text, let sourceApp, let sourceBundleID):
             if let recent = mostRecent(), recent.text == text {
                 recent.createdAt = .now
             } else {
-                context.insert(ClipboardEntry(text: text))
+                context.insert(ClipboardEntry(text: text, sourceApp: sourceApp, sourceBundleID: sourceBundleID))
             }
         }
         try context.save()
@@ -55,11 +55,11 @@ final class ClipboardRepository: ClipboardRepositoryProtocol {
 
     func save(_ content: ClipboardContent) throws {
         switch content {
-        case .text(let text):
+        case .text(let text, let sourceApp, let sourceBundleID):
             if entries.last?.text == text {
                 entries[entries.endIndex - 1].createdAt = .now
             } else {
-                entries.append(ClipboardEntry(text: text))
+                entries.append(ClipboardEntry(text: text, sourceApp: sourceApp, sourceBundleID: sourceBundleID))
             }
         }
     }

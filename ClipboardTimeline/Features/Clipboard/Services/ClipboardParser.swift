@@ -1,6 +1,8 @@
 import AppKit
 
 /// Stateless service that extracts typed content from a pasteboard.
+/// Captures the frontmost application at the moment of parsing so the
+/// source app can be stored alongside the clipboard entry.
 /// Returns nil for unsupported types or empty strings.
 struct ClipboardParser: ClipboardParsing {
     func parse(_ pasteboard: NSPasteboard) -> ClipboardContent? {
@@ -10,6 +12,12 @@ struct ClipboardParser: ClipboardParsing {
         else {
             return nil
         }
-        return .text(text)
+
+        let frontmost = NSWorkspace.shared.frontmostApplication
+        return .text(
+            text,
+            sourceApp: frontmost?.localizedName,
+            sourceBundleID: frontmost?.bundleIdentifier
+        )
     }
 }

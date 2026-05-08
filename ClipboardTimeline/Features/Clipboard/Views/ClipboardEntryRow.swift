@@ -5,52 +5,124 @@ struct ClipboardEntryRow: View {
     let isSelected: Bool
 
     var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(entry.text)
-                    .lineLimit(2)
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(isSelected ? .white : .primary)
+        HStack(alignment: .top, spacing: 10) {
+            typeIcon
+            contentStack
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(selectionBackground)
+        .contentShape(Rectangle())
+        .padding(.horizontal, 6)
+    }
 
-                Text(entry.createdAt, style: .relative)
-                    .font(.system(size: 11))
-                    .foregroundStyle(isSelected ? .white.opacity(0.65) : .secondary)
+    // MARK: - Subviews
+
+    private var typeIcon: some View {
+        Image(systemName: contentType.symbolName)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(isSelected ? .white.opacity(0.9) : Color.accentColor)
+            .frame(width: 26, height: 26)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected
+                          ? Color.white.opacity(0.15)
+                          : Color.accentColor.opacity(0.08))
+            )
+            .padding(.top, 1)
+    }
+
+    private var contentStack: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(entry.text)
+                .lineLimit(2)
+                .font(.system(size: 13))
+                .foregroundStyle(isSelected ? .white : .primary)
+
+            metadataRow
+        }
+    }
+
+    private var metadataRow: some View {
+        HStack(spacing: 3) {
+            if let app = entry.sourceApp {
+                Text(app)
+                Text("·")
             }
+            Text(entry.createdAt, style: .relative)
+        }
+        .font(.system(size: 11))
+        .foregroundStyle(isSelected ? .white.opacity(0.6) : .secondary)
+    }
 
-            Spacer()
+    private var selectionBackground: some View {
+        RoundedRectangle(cornerRadius: 7)
+            .fill(isSelected ? Color.accentColor : Color.clear)
+    }
 
-            if entry.isFavorite {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(isSelected ? .white.opacity(0.8) : .yellow)
+    // MARK: - Content type detection
+
+    private enum ContentType {
+        case url, code, text
+
+        var symbolName: String {
+            switch self {
+            case .url:  return "link"
+            case .code: return "curlybraces"
+            case .text: return "doc.text"
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(isSelected ? Color.accentColor : .clear)
-        )
-        .contentShape(Rectangle())
-        .padding(.horizontal, 8)
+    }
+
+    private var contentType: ContentType {
+        let trimmed = entry.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasPrefix("http://") || trimmed.hasPrefix("https://") {
+            return .url
+        }
+        if (trimmed.contains("{") && trimmed.contains("}")) || trimmed.hasPrefix("#!") {
+            return .code
+        }
+        return .text
     }
 }
 
 // MARK: - Preview
 
 #if !SPM_BUILD
-#Preview("Selected") {
+#Preview("Selected — plain text") {
     ClipboardEntryRow(
-        entry: .init(text: "let greeting = \"Hello, World!\""),
+        entry: .init(text: "The quick brown fox jumps over the lazy dog.",
+                     sourceApp: "Notes"),
         isSelected: true
     )
     .frame(width: 560)
     .padding(.vertical, 4)
 }
 
-#Preview("Normal") {
+#Preview("Normal — URL") {
     ClipboardEntryRow(
-        entry: .init(text: "This is a longer piece of text that was copied from a document. It may wrap to a second line."),
+        entry: .init(text: "https://developer.apple.com/documentation/swiftui",
+                     sourceApp: "Safari"),
+        isSelected: false
+    )
+    .frame(width: 560)
+    .padding(.vertical, 4)
+}
+
+#Preview("Normal — code") {
+    ClipboardEntryRow(
+        entry: .init(text: "func greet(_ name: String) -> String {\n    return \"Hello, \\(name)!\"\n}",
+                     sourceApp: "Xcode"),
+        isSelected: false
+    )
+    .frame(width: 560)
+    .padding(.vertical, 4)
+}
+
+#Preview("Normal — no source app") {
+    ClipboardEntryRow(
+        entry: .init(text: "cmd + shift + v"),
         isSelected: false
     )
     .frame(width: 560)
